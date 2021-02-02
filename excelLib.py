@@ -36,25 +36,35 @@ def getType(variate):
     return arr[vartype]
 
 
-def createNameStrs(prevName=None, midName=None, nums=[1]*1, rjust=0, afterName=None) -> list:
+def createNameStrs(prevName=None, midName=None, nums=[1]*1, rjust=0, afterName=None, startPos=[1]*1) -> list:
     """
     创建名字序列；
-    params:前缀、连接符、循环列表、对齐、后缀
+    params:前缀、连接符、结束位置列表、对齐、后缀、开始位置列表
     """
     resultStrs = []
     string = ''
+    # process stop pos
     if isinstance(nums, list):
         numeration = True
     elif isinstance(nums, int):
         numeration = False
         nums = [nums]
+    # process start pos
+    if isinstance(startPos, int):
+        startPos = [startPos]
+    if len(startPos) < len(nums):
+        affixArr = [startPos[len(startPos)-1]]*(len(nums)-len(startPos))
+        startPos.extend(affixArr)
+
     if len(nums) > 0:
         for i in range(len(nums)):
-            for j in range(nums[i]):
-                string = (prevName if prevName else '') + (str(i + 1) if numeration else '') + \
-                         (midName if midName else '') + str(j + 1).rjust(rjust, '0') + \
-                         (afterName if afterName else '')
-                resultStrs.append(string)
+            # startPos[i]可能大于nums[i]
+            if startPos[i] < nums[i]:
+                for j in range(startPos[i], nums[i]+1):
+                    string = (prevName if prevName else '') + (str(i + 1) if numeration else '') + \
+                             (midName if midName else '') + str(j).rjust(rjust, '0') + \
+                             (afterName if afterName else '')
+                    resultStrs.append(string)
     else:
         pass
     return resultStrs
@@ -83,7 +93,7 @@ def createExcels(wb: Workbook, path=None, excelNames=[]):
 
 def createSheets(wb: Workbook, sheetNames=[], deletePrev=True):
     """
-    创建sheet；
+    创建sheet；可接收字符串及list参数，只创建未存在sheet
     params:excel，名称列表，清除旧有数据flag
     """
     existNames = wb.sheetnames
@@ -100,6 +110,17 @@ def createSheets(wb: Workbook, sheetNames=[], deletePrev=True):
             if existNames[i] not in sheetNames:
                 del wb[existNames[i]]
     return
+
+
+def changeSheetName(wb: Workbook, sheetName: str, newName: str) -> bool:
+    """
+    改变sheet名称
+    """
+    if sheetName not in wb.sheetnames:
+        return False
+    ws = wb[sheetName]
+    ws.title = newName
+    return True
 
 
 def insertDataToPos(wb: Workbook, row, col, value, sheetNames=None):
@@ -129,6 +150,13 @@ def insertDataToPos(wb: Workbook, row, col, value, sheetNames=None):
         sh = wb[sheetNames[i]]
         sh.cell(row, col, value[i])
     return True
+# 测试用例
+# insertDataToPos(wb, 2, 1, 'test')
+# insertDataToPos(wb, 1, 2, ['test1', 'test2'])
+# insertDataToPos(wb, 2, 2, ['test1', 'test2', 'test3', 'test4'])
+# insertDataToPos(wb, 3, 3, 'test0', 'Sheet')
+# insertDataToPos(wb, 4, 4, 'test0', ['Sheet', 'test3'])
+# insertDataToPos(wb, 5, 5, 'test0', ['Shet', 'test3'])
 
 
 def makeDir(path):

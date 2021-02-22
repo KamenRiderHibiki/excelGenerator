@@ -85,6 +85,10 @@ def createExcels(wb: Workbook, path=None, excelNames=[]):
     保存批量复制的excel；
     params:excel，路径，名称列表
     """
+    # 处理excelNames传入string的情况
+    if isinstance(excelNames, str):
+        excelNames = [excelNames]
+
     if excelNames != []:
         for i in range(len(excelNames)):
             wb.save((path if path else '') + '\\' + excelNames[i] + '.xlsx')

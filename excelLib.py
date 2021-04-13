@@ -1,6 +1,8 @@
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import os
+import multiWayTree as MWT
+import const
 
 
 def typeof(variate) -> str:
@@ -195,3 +197,30 @@ def removeDir(path):
     # 如果去掉rmdir()可以实现删除文件而不删除文件夹
     os.rmdir(path)
     return
+
+
+def createMWTElement(e: MWT.MultiWayTree, path: str, name: str, wb: Workbook) -> str:
+    """
+    按MWT结点创建叶子（非公开API）
+    """
+    result = path
+    if e.type == const.TYPE_FOLDER:
+        if e.name == const.STR_INPUT:
+            result = path + '\\' + name
+            makeDir(result)
+        else:
+            result = path + '\\' + e.name
+            makeDir(result)
+    elif e.type == const.TYPE_EXCEL:
+        createExcels(wb, path, name)
+    return result
+
+
+def createMWTFolders(tree: MWT.MultiWayTree, path: str, name: str, wb: Workbook) -> str:
+    """
+    按目录和名词输出MWT给定的文件结构
+    """
+    tempPath = createMWTElement(tree, path, name, wb)
+    for child_of_tree in tree.child:
+        createMWTFolders(child_of_tree, tempPath, name, wb)
+    return tempPath
